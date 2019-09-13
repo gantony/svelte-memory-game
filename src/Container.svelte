@@ -1,9 +1,12 @@
 <script>
+	import { store, score } from './store.js';
 	import Card from './Card.svelte';
 	
 	export let rows = 2;
 	export let columns = 2;
 	
+	store.init(rows, columns);
+
 	function getRandomColor() {
 		var letters = '0123456789ABCDEF';
 		var color = '#';
@@ -28,46 +31,51 @@
 			return a;
 	}
 
-	export let score = 0
+	// export let score = 0
 	
-	const numColors = rows * columns / 2;
+	// const numColors = rows * columns / 2;
 	
-	let tiles = []
-	for (let i = 0; i < numColors; i++) {
-		const randomColor = getRandomColor();
-		tiles.push(randomColor);
-		tiles.push(randomColor);
-	}
+	// let tiles = []
+	// for (let i = 0; i < numColors; i++) {
+	// 	const randomColor = getRandomColor();
+	// 	tiles.push(randomColor);
+	// 	tiles.push(randomColor);
+	// }
 	
-	shuffle(tiles);
-	var visible = []
-	export function onSelected(c) {
-		console.log("SELECTED")
-		console.log(c)
+	// // function nextStep() {
+
+	// // }
+
+	// shuffle(tiles);
+	// var visible = []
+	// export function onSelected(c) {
+	// 	console.log("SELECTED")
+	// 	console.log(c)
 		
-		if (visible.length < 2) {
-			visible.push(c);
-			c.show();
-		}
+	// 	if (visible.length < 2) {
+	// 		visible.push(c);
+	// 		c.show();
+	// 	}
 		
-		if (visible.length === 2) {
-			const shouldRemove = visible[0].color === visible[1].color
-			if (shouldRemove) {
-				console.log("increase score")
-				score ++;
-			}
-			setTimeout(function() {
-				visible.forEach(function(c) {
-					if (shouldRemove) {
-						c.remove();
-					} else {
-						c.hide()
-					}
-				})
-				visible.length = 0;
-			}, 1000);
-		}
-	}
+	// 	if (visible.length === 2) {
+	// 		const shouldRemove = visible[0].color === visible[1].color
+	// 		if (shouldRemove) {
+	// 			console.log("increase score")
+	// 			score ++;
+	// 		}
+	// 		setTimeout(function() {
+	// 			visible.forEach(function(c) {
+	// 				if (shouldRemove) {
+	// 					c.remove();
+	// 					nextStep();
+	// 				} else {
+	// 					c.hide()
+	// 				}
+	// 			})
+	// 			visible.length = 0;
+	// 		}, 1000);
+	// 	}
+	// }
 </script>
 
 <style>
@@ -77,12 +85,12 @@
 </style>
 
 <h2>
-	{score}
+	{$score}
 </h2>
 <div>
-	{#each tiles as tileColor, i}
-		<Card h=70 w=70 color={tileColor} callback={onSelected}></Card> 
-	  {#if (i+1) % rows === 0}
+	{#each $store as card, i}
+		<Card h=70 w=70 id={i} active={card.isActive} invisible={card.isInvisible}  color={card.color} ></Card> 
+	  {#if (i+1) % columns === 0}
 			<br />
 		{/if}
 	{/each}
