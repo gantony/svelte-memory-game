@@ -4,4 +4,4 @@
 </script>
 
 <h1>Memory game </h1>
-<Container  rows=2 columns=3> </Container>
+<Container  rows=5 columns=8> </Container>

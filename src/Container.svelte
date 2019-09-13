@@ -1,11 +1,8 @@
 <script>
-	import { store, score } from './store.js';
 	import Card from './Card.svelte';
 	
 	export let rows = 2;
 	export let columns = 2;
-	
-	store.init(rows, columns);
 
 	function getRandomColor() {
 		var letters = '0123456789ABCDEF';
@@ -31,51 +28,89 @@
 			return a;
 	}
 
-	// export let score = 0
-	
-	// const numColors = rows * columns / 2;
-	
-	// let tiles = []
-	// for (let i = 0; i < numColors; i++) {
-	// 	const randomColor = getRandomColor();
-	// 	tiles.push(randomColor);
-	// 	tiles.push(randomColor);
-	// }
-	
-	// // function nextStep() {
 
-	// // }
+	let totalWidth = 100;
+	const cardMargin = 10;	// There is some text being inserted between divs...
+	$: tileWidth = columns > 0 ? (totalWidth / columns) - cardMargin : totalWidth - cardMargin;
 
-	// shuffle(tiles);
-	// var visible = []
-	// export function onSelected(c) {
-	// 	console.log("SELECTED")
-	// 	console.log(c)
+	let score = 0
+	let cards = []
+
+	function resetCards() {
+		const numColors = rows * columns / 2;
 		
-	// 	if (visible.length < 2) {
-	// 		visible.push(c);
-	// 		c.show();
-	// 	}
+		let tiles = []
+		for (let i = 0; i < numColors; i++) {
+			const randomColor = getRandomColor();
+			tiles.push(randomColor);
+			tiles.push(randomColor);
+		}
+
+		shuffle(tiles);
+		cards = tiles.map((color, i) => { return {
+			id: i,
+			color: color,
+			isActive: false,
+			isInvisible: false,
+		}});
+
+		score = 0; 	// This is more that just reseting cards...
+	}
+
+	resetCards();
+
+	$: isGameOver = !cards.some(function(card) {
+		return !card.isInvisible;
+	});
+
+	var visible = []
+
+	function get(id) {
+		// This works by creating a subscription, reading the value, then unsubscribing. 
+		// It's therefore not recommended in hot code paths.
+		return cards[id];
+	}
+    function show(id) {
+		// id is index really...
+		cards[id].isActive = true;
+	}
+    function remove(id) {
+		// id is index really...
+		cards[id].isInvisible = true;
+	}
+    function hide(id) {
+		// id is index really...
+		cards[id].isActive = false;
+	}
 		
-	// 	if (visible.length === 2) {
-	// 		const shouldRemove = visible[0].color === visible[1].color
-	// 		if (shouldRemove) {
-	// 			console.log("increase score")
-	// 			score ++;
-	// 		}
-	// 		setTimeout(function() {
-	// 			visible.forEach(function(c) {
-	// 				if (shouldRemove) {
-	// 					c.remove();
-	// 					nextStep();
-	// 				} else {
-	// 					c.hide()
-	// 				}
-	// 			})
-	// 			visible.length = 0;
-	// 		}, 1000);
-	// 	}
-	// }
+	export function onSelected(c) {
+		console.log("SELECTED")
+		console.log(c)
+		
+		if (visible.length < 2) {
+			visible.push(c);
+			show(c);
+		}
+		
+		if (visible.length === 2) {
+			const shouldRemove = get(visible[0]).color === get(visible[1]).color
+			if (shouldRemove) {
+				console.log("increase score")
+				score ++;
+			}
+			setTimeout(function() {
+				visible.forEach(function(c) {
+					if (shouldRemove) {
+						remove(c);
+						// nextStep();
+					} else {
+						hide(c)
+					}
+				})
+				visible.length = 0;
+			}, 1000);
+		}
+	}
 </script>
 
 <style>
@@ -84,12 +119,16 @@
 	}
 </style>
 
+
 <h2>
-	{$score}
+	{score}
 </h2>
-<div>
-	{#each $store as card, i}
-		<Card h=70 w=70 id={i} active={card.isActive} invisible={card.isInvisible}  color={card.color} ></Card> 
+{#if isGameOver}
+	<button on:click={resetCards}>Play again!</button>
+{/if}
+<div bind:clientWidth={totalWidth}>
+	{#each cards as card, i}
+		<Card h={tileWidth} w={tileWidth} id={i} active={card.isActive} invisible={card.isInvisible} color={card.color} callback={onSelected} ></Card> 
 	  {#if (i+1) % columns === 0}
 			<br />
 		{/if}
